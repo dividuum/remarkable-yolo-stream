@@ -31,10 +31,37 @@ async function update() {
     for (let i = 0; i < frame.length; i+=2) {
       const a = frame[i], b = frame[i+1]
       // XXX: what's in a!?
-      imageData.data[offset+0] = b
-      imageData.data[offset+1] = b
-      imageData.data[offset+2] = b
-      imageData.data[offset+3] = 255
+      if (b == 0x52) {
+        imageData.data[offset+0] = 255
+        imageData.data[offset+1] = 0
+        imageData.data[offset+2] = 0
+        imageData.data[offset+3] = 255
+      } else if (b == 0x8c) {
+        imageData.data[offset+0] = 255
+        imageData.data[offset+1] = 0
+        imageData.data[offset+2] = 255
+        imageData.data[offset+3] = 255
+      } else if (b == 0x9c) {
+        imageData.data[offset+0] = 0
+        imageData.data[offset+1] = 0
+        imageData.data[offset+2] = 255
+        imageData.data[offset+3] = 255
+      } else if (b == 0xb5) {
+        imageData.data[offset+0] = 0
+        imageData.data[offset+1] = 255
+        imageData.data[offset+2] = 0
+        imageData.data[offset+3] = 255
+      } else if (b == 0xd6) {
+        imageData.data[offset+0] = 255
+        imageData.data[offset+1] = 253
+        imageData.data[offset+2] = 84
+        imageData.data[offset+3] = 255
+      } else {
+        imageData.data[offset+0] = b
+        imageData.data[offset+1] = b
+        imageData.data[offset+2] = b
+        imageData.data[offset+3] = 255
+      }
       offset += 4
     }
     ctx.putImageData(imageData, 0, 0)
