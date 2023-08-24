@@ -39,8 +39,8 @@ func makeGzipHandler(fn http.HandlerFunc) http.HandlerFunc {
 }
 
 var (
-	pointerAddr int64
-	file        io.ReaderAt
+	frameAddr  int64
+	xochitlMem io.ReaderAt
 
 	//go:embed index.html
 	index []byte
@@ -58,9 +58,8 @@ func getPid() string {
 	return lines[0]
 }
 
-func getOffset(pid string) int64 {
-	filePath := "/proc/" + pid + "/maps"
-	file, err := os.Open(filePath)
+func getFrameAddr(pid string) int64 {
+	file, err := os.Open("/proc/" + pid + "/maps")
 	if err != nil {
 		log.Fatalf("Error opening file:", err)
 	}
@@ -85,7 +84,7 @@ func getOffset(pid string) int64 {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	data := make([]uint8, 1872*1404*2)
-	n, err := file.ReadAt(data, pointerAddr)
+	n, err := xochitlMem.ReadAt(data, frameAddr)
 	if err != nil || n != len(data) {
 		log.Fatal(err)
 	}
@@ -107,7 +106,7 @@ func getMux() *http.ServeMux {
 
 func main() {
 	pid := getPid()
-	file, _ = os.OpenFile("/proc/"+pid+"/mem", os.O_RDONLY, os.ModeDevice)
-	pointerAddr = getOffset(pid) + 5259272 // XXX: what?
+	xochitlMem, _ = os.OpenFile("/proc/"+pid+"/mem", os.O_RDONLY, os.ModeDevice)
+	frameAddr = getFrameAddr(pid) + 5259272 // XXX: what?
 	http.ListenAndServe(":1113", getMux())
 }
