@@ -1,6 +1,11 @@
 let canvas = document.getElementById("canvas")
 let ctx = canvas.getContext("2d")
 
+let refreshes = 0
+let updater = null
+
+ctx.fillStyle = "red"
+
 async function update() {
   try {
     const response = await fetch('/raw')
@@ -28,9 +33,8 @@ async function update() {
       frame.set(chunk, frame_offset)
       frame_offset += chunk.length
     })
-    for (let i = 0; i < frame.length; i+=2) {
-      const a = frame[i], b = frame[i+1]
-      // XXX: what's in a!?
+    for (let i = 0; i < frame.length; i++) {
+      const b = frame[i]
       if (b == 0x52) {
         imageData.data[offset+0] = 255
         imageData.data[offset+1] = 0
@@ -65,11 +69,27 @@ async function update() {
       offset += 4
     }
     ctx.putImageData(imageData, 0, 0)
-    setTimeout(update, 100)
+    console.log(refreshes)
+    if (--refreshes > 0) {
+      updater = setTimeout(update, 100)
+    } else {
+      updater = null
+    }
   } catch (e) {
-    ctx.fillStyle = "red"
     ctx.fillRect(0, 0, canvas.width, canvas.height)
   }
 }
 
 update()
+
+let es = new EventSource("/events")
+es.onmessage = () => {
+  refreshes = 20
+  if (!updater) {
+    updater = setTimeout(update, 10)
+  }
+}
+es.onerror = () => {
+  console.log("ERROR")
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+}
